@@ -1,4 +1,4 @@
-# Student Registration Dashboard - Placement Cell RTU
+# Student Registration Dashboard 
 
 A comprehensive QR-based attendance tracking system for placement cell activities at Rajasthan Technical University (RTU).
 
