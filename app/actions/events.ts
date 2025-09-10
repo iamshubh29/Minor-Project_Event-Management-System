@@ -1,20 +1,15 @@
-'use server'
-import Event from "@/models/Event";
+'use server';
+
 import { connectToDatabase } from '@/lib/db';
-import User from '@/models/User';
-import Students from '@/models/Students'
+import Event, { IEvent } from "@/models/Event";
+import Students from '@/models/Students';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { generateToken } from '@/lib/auth';
-import { any } from 'zod';
-import jwt from 'jsonwebtoken';
 import { sendMail } from '@/lib/email';
-import { registrationTemplate } from '@/mail/studentRegistration';
 import { AttendanceTemplate } from "@/mail/StudentAttendanceMail";
 import { reminderEmailTemplate } from "@/mail/Remind";
+import { toZonedTime, format } from "date-fns-tz";
 
-
-
+const indiaTimeZone = "Asia/Kolkata"; // IST
 
 export async function createEvent(eventName: string, eventDate: string) {
   try {
@@ -22,42 +17,26 @@ export async function createEvent(eventName: string, eventDate: string) {
     const newEvent = new Event({ eventName, eventDate });
     await newEvent.save();
     console.log("Event created:", newEvent);
-    const plain = newEvent.toObject();
     revalidatePath('/admin/scanner');
-    return {
-      ok: true,
-      event: {
-        ...plain,
-        _id: plain._id?.toString?.() ?? String(plain._id),
-        createdAt: plain.createdAt?.toISOString?.() ?? plain.createdAt,
-        updatedAt: plain.updatedAt?.toISOString?.() ?? plain.updatedAt,
-      },
-    };
+
+    const plainEvent = JSON.parse(JSON.stringify(newEvent));
+    return { ok: true, event: plainEvent };
   } catch (error) {
     console.error("Error creating event:", error);
     return { ok: false, error: 'Failed to create event' };
   }
 }
 
-
 export async function getEvents() {
   try {
     await connectToDatabase();
-    const events = await Event.find({}).sort({ createdAt: -1 }).lean();
-    const serialized = (events || []).map((e: any) => ({
-      ...e,
-      _id: e._id?.toString?.() ?? String(e._id),
-      createdAt: e.createdAt?.toISOString?.() ?? e.createdAt,
-      updatedAt: e.updatedAt?.toISOString?.() ?? e.updatedAt,
-    }));
-    console.log('Event Data', serialized);
-    return serialized;
+    const events = await Event.find({}).sort({ createdAt: -1 }).lean<IEvent[]>();
+    return JSON.parse(JSON.stringify(events));
   } catch (error) {
     console.error("Error fetching events:", error);
     return [];
   }
 }
-
 
 export async function deleteEvent(id: string) {
   try {
@@ -76,16 +55,15 @@ export async function deleteEvent(id: string) {
   }
 }
 
-// Download helpers
 export async function getEventAttendance(eventId: string) {
   try {
     await connectToDatabase();
-    const event = await Event.findById(eventId).lean();
+    const event = await Event.findById(eventId).lean<IEvent | null>();
+
     if (!event) {
       return { ok: false, error: 'Event not found' };
     }
 
-    // Pull students registered for this event
     const students = await Students.find({ eventName: event.eventName }).lean();
 
     const rows = (students || []).map((s: any) => ({
@@ -110,64 +88,47 @@ export async function getEventAttendance(eventId: string) {
   }
 }
 
-
-
-import { toZonedTime, format } from "date-fns-tz";
-import { QrCode } from 'lucide-react';
-import { yearsToDays } from 'date-fns';
-import { eventNames } from "process";
-
-const indiaTimeZone = "Asia/Kolkata"; // IST
-
 export async function markStudentAttendence(userId: string) {
   try {
     await connectToDatabase();
- 
 
     let user = await Students.findOne({
       qrCode: `${process.env.NEXT_PUBLIC_APP_URL || 'https://student-dashboard-sable.vercel.app'}/scan/${userId}`
     });
 
-
-    if(!user){
+    if (!user) {
       return { success: false, error: 'User not found' };
-
     }
 
-    // ✅ Convert today's date to IST (without time)
     const todayIST = format(toZonedTime(new Date(), indiaTimeZone), 'yyyy-MM-dd');
-
-    // ✅ Check if attendance is already marked for today
     const attendanceToday = user.attendance.find((a: any) => {
       const attendanceDateIST = format(
         toZonedTime(new Date(a.date), indiaTimeZone),
         'yyyy-MM-dd'
       );
-
-      return attendanceDateIST === todayIST; // Compare only the date part
+      return attendanceDateIST === todayIST;
     });
 
     if (attendanceToday) {
       return {
         success: true,
         message: 'Attendance already marked for today',
-        user: {
+        user: JSON.parse(JSON.stringify({
           id: user._id.toString(),
           name: user.name,
           rollNumber: user.rollNumber
-        }
+        }))
       };
     }
 
-    // ✅ Store attendance date in UTC (safe for database)
     user.attendance.push({
-      date: new Date().toISOString(),
+      date: new Date(),
       present: true
     });
 
     await user.save();
-    const html = AttendanceTemplate(user.name,user.rollNumber,user.eventName)
-    const mailResponse = await sendMail({
+    const html = AttendanceTemplate(user.name, user.rollNumber, user.eventName);
+    await sendMail({
       to: user.email,
       subject: 'Thanks For Attending the Event',
       html
@@ -177,11 +138,11 @@ export async function markStudentAttendence(userId: string) {
     return {
       success: true,
       message: 'Attendance marked successfully',
-      user: {
+      user: JSON.parse(JSON.stringify({
         id: user._id.toString(),
         name: user.name,
         rollNumber: user.rollNumber
-      }
+      }))
     };
   } catch (error) {
     console.error('Error marking attendance:', error);
@@ -189,14 +150,11 @@ export async function markStudentAttendence(userId: string) {
   }
 }
 
-
-
-
 export async function RemainerStudents(id: string) {
   try {
     await connectToDatabase();
 
-    const event = await Event.findById(id);
+    const event = await Event.findById(id).lean<IEvent | null>();
     if (!event) {
       return { success: false, message: 'Event not found' };
     }
@@ -206,7 +164,6 @@ export async function RemainerStudents(id: string) {
       return { success: false, message: 'No students found for this event' };
     }
 
-    // Format event date for display
     const eventDate = new Date(event.eventDate);
     const formattedDate = eventDate.toLocaleDateString('en-IN', {
       weekday: 'long',
@@ -220,9 +177,9 @@ export async function RemainerStudents(id: string) {
         to: student.email,
         subject: `📅 Event Reminder: ${event.eventName} - ${formattedDate}`,
         html: reminderEmailTemplate(
-          student.name, 
-          event.eventName, 
-          "RTU Campus, Kota", 
+          student.name,
+          event.eventName,
+          "RTU Campus, Kota",
           `${formattedDate} at 3:00 PM`
         ),
       })
@@ -231,9 +188,9 @@ export async function RemainerStudents(id: string) {
     await Promise.all(mailPromises);
 
     console.log(`Reminder emails sent to ${students.length} students for event: ${event.eventName}`);
-    return { 
-      success: true, 
-      message: `Reminder emails sent successfully to ${students.length} students` 
+    return {
+      success: true,
+      message: `Reminder emails sent successfully to ${students.length} students`
     };
   } catch (error) {
     console.error('Error in RemainerStudents:', error);
