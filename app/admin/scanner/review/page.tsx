@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
+import { exportStudentsToExcel } from "@/app/actions/export";
 import {
   Select,
   SelectContent,
@@ -62,7 +63,8 @@ export default function AdminReviewPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
 
   // filters
@@ -130,6 +132,29 @@ const [open, setOpen] = useState(false);
     new Set(students.flatMap((s) => s.domain))
   );
 
+  // Download handler function
+  const handleDownload = async () => {
+    setDownloading(true);
+    toast({ title: "Generating Excel file...", description: "Please wait a moment." });
+
+    const result = await exportStudentsToExcel();
+
+    if (result.success && result.file) {
+      // Create a temporary link to trigger the download
+      const link = document.createElement("a");
+      link.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${result.file}`;
+      link.download = "student_data.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "Success", description: "Excel file downloaded." });
+    } else {
+      toast({ variant: "destructive", title: "Error", description: result.error });
+    }
+
+    setDownloading(false);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-end">
@@ -143,8 +168,8 @@ const [open, setOpen] = useState(false);
 
       <h1 className="text-2xl font-bold mb-4">Admin: Review Students</h1>
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-4">
+      {/* Filters and Download Button */}
+      <div className="flex flex-wrap gap-4 mb-4">
         <Select onValueChange={setBranchFilter}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Filter by Branch" />
@@ -179,6 +204,11 @@ const [open, setOpen] = useState(false);
           }}
         >
           Reset
+        </Button>
+
+        <Button onClick={handleDownload} disabled={downloading}>
+          <Download className="h-4 w-4 mr-2" />
+          {downloading ? "Downloading..." : "Download Excel"}
         </Button>
       </div>
 

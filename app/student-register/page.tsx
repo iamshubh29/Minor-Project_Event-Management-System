@@ -146,7 +146,7 @@ export default function RegisterPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
           <img src="/RTU logo.png" alt="Logo" className="h-8 w-8" />
-            <h1 className="text-xl font-bold">Placement Cell</h1>
+            <h1 className="text-xl font-bold">Event Management System</h1>
           </div>
           <Link href="/">
             <Button variant="ghost" size="sm">
@@ -157,10 +157,10 @@ export default function RegisterPage() {
         </div>
       </header>
 
-      {/* <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+      <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-xl md:text-2xl">Core Team Recruitment</CardTitle>
+            <CardTitle className="text-xl md:text-2xl">Student Registration</CardTitle>
             <CardDescription className="text-xs md:text-sm">
               Register Yourself to get your QR code
             </CardDescription>
@@ -178,7 +178,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Divyanshu Sharma" {...field} />
+                        <Input placeholder="Enter your full name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -194,7 +194,7 @@ export default function RegisterPage() {
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="divyanshu@gmail.com"
+                          placeholder="your.email@gmail.com"
                           {...field}
                         />
                       </FormControl>
@@ -272,8 +272,6 @@ export default function RegisterPage() {
                   )}
                 />
 
-               
-
                 <FormField
                   control={form.control}
                   name="eventName"
@@ -299,11 +297,9 @@ export default function RegisterPage() {
                             className="w-full border border-input rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-ring"
                           >
                             <option value="">Select an event</option>
-
-                              <option value="Core Team Recruitment">
-                                Core Team Recruitment
-                              </option>
-
+                            <option value="Core Team Recruitment">
+                              Core Team Recruitment
+                            </option>
                           </select>
                         )}
                       </FormControl>
@@ -340,13 +336,12 @@ export default function RegisterPage() {
                   )}
                 />
 
-
-  <FormField
+                <FormField
                   control={form.control}
                   name="cgpa"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cgpa </FormLabel>
+                      <FormLabel>CGPA</FormLabel>
                       <FormControl>
                         <Input placeholder="9.4" {...field} />
                       </FormControl>
@@ -355,127 +350,122 @@ export default function RegisterPage() {
                   )}
                 />
 
-                       <FormField
+                <FormField
                   control={form.control}
                   name="back"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>No. of Active Backlogs </FormLabel>
+                      <FormLabel>No. of Active Backlogs</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="0" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-               <FormField
+                <FormField
                   control={form.control}
                   name="summary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Why should we have you in PTP ?</FormLabel>
+                      <FormLabel>Why should we have you in PTP?</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="Tell us about yourself..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                 <FormField
+                <FormField
                   control={form.control}
                   name="clubs"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel >Active in which Clubs? (Write NONE if not active in any )</FormLabel>
+                      <FormLabel>Active in which Clubs? (Write NONE if not active in any)</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="NONE" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-
-                
+                <FormField
+                  control={form.control}
+                  name="domain"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select your preferred domain(s) [MAX:2]</FormLabel>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["Management","Graphic Designer","Video Editing","Photography","Content Writer","HR HEAD","Web Developer(Next.js Preferred)"].map((domain) => (
+                          <label key={domain} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              value={domain}
+                              checked={field.value?.includes(domain)}
+                              onChange={(e) => {
+                                const currentValues = field.value || [];
+                                if (e.target.checked) {
+                                  if (currentValues.length < 2) {
+                                    field.onChange([...currentValues, domain]);
+                                  }
+                                } else {
+                                  field.onChange(currentValues.filter((d) => d !== domain));
+                                }
+                              }}
+                            />
+                            <span>{domain}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
-  control={form.control}
-  name="domain"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Select your preferred domain(s)  [MAX:2]</FormLabel>
-      <div className="grid grid-cols-2 gap-2">
-        {["Management","Graphic Designer","Video Editing","Photography","Content Writer","HR HEAD","Web Developer(Next.js Preferred)"].map((domain) => (
-          <label key={domain} className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              value={domain}
-              checked={field.value?.includes(domain)}
-              onChange={(e) => {
-                const currentValues = field.value || [];
-                if (e.target.checked) {
-                  // Allow adding only if less than 2 already selected
-                  if (currentValues.length < 2) {
-                    field.onChange([...currentValues, domain]);
-                  }
-                } else {
-                  // Remove if unchecked
-                  field.onChange(currentValues.filter((d) => d !== domain));
-                }
-              }}
-            />
-            <span>{domain}</span>
-          </label>
-        ))}
-      </div>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
-  
-               <FormField
                   control={form.control}
                   name="aim"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>What is your aim ?</FormLabel>
+                      <FormLabel>What is your aim?</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="Your career goals..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-               <FormField
+
+                <FormField
                   control={form.control}
                   name="believe"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Do you believe joining the PTP will lead to placement opportunity?</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-               <FormField
-                  control={form.control}
-                  name="expect"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>What do you expect from PTP?</FormLabel>
-                      <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="Your thoughts..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="expect"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>What do you expect from PTP?</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your expectations..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <Button
                   type="submit"
@@ -499,20 +489,12 @@ export default function RegisterPage() {
             </p>
           </CardFooter>
         </Card>
-      </main> */}
-
-                <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
-        <Card className="w-full max-w-lg md:max-w-xl lg:max-w-2xl text-center">
-          <h1 className="text-xl font-bold">Oop's, It's too Late!!</h1>
-          <h3 className="text-lg font-semibold">Registration Closed</h3>
-        </Card>
-
-                 </main>
+      </main>
 
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground flex-col flex items-center">
           <span>
-            © {new Date().getFullYear()} Placement Cell. All rights reserved.
+            © {new Date().getFullYear()} Event Management System. All rights reserved.
           </span>
           <span className="text-sm">Developed By Placement Team</span>
         </div>

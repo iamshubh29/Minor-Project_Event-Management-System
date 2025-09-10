@@ -41,7 +41,7 @@ export const recruiterInvitationTemplate = () => {
           <p style="margin-bottom: 6px;">Thanks & Regards,</p>
           <p style="margin-bottom: 20px;">
             <strong>Dr. Manish Chaturvedi</strong><br/>
-            CHAIRMAN, Training & Placement Cell<br/>
+            CHAIRMAN, Training & Event Management System<br/>
             University Department<br/>
             Rajasthan Technical University, Kota<br/>
             Mob. No.: +91-94144-89208<br/>

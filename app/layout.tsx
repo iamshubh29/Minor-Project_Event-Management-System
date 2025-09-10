@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Placement Cell',
-  description: 'QR-based attendance system for placement cell',
+  title: 'Event Management System',
+  description: 'QR-based attendance system for event management',
 };
 
 export default function RootLayout({

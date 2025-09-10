@@ -83,7 +83,7 @@ export default function LoginPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <GraduationCap className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Placement Cell</h1>
+            <h1 className="text-xl font-bold">Event Management System</h1>
           </div>
           <Link href="/">
             <Button variant="ghost" size="sm">
@@ -147,7 +147,7 @@ export default function LoginPage() {
 
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Placement Cell. All rights reserved.
+          © {new Date().getFullYear()} Event Management System. All rights reserved.
         </div>
       </footer>
     </div>

@@ -41,6 +41,14 @@ export async function registerUser(userData: { name: string; email: string; roll
     });
     
     await newUser.save();
+
+    // Send registration email with QR code
+    const html = registrationTemplate(newUser.name, userData.rollNumber, "Core Team Registration", qrCodeUrl, userData.email);
+    const mailResponse = await sendMail({
+      to: userData.email,
+      subject: 'Registration Confirmation',
+      html
+    });
     
     revalidatePath('/dashboard');
     
@@ -75,7 +83,12 @@ export async function getUserById(userId: string) {
         email: user.email,
         rollNumber: user.rollNumber,
         qrCode: user.qrCode,
-        attendance: user.attendance,
+        attendance: Array.isArray(user.attendance)
+          ? user.attendance.map((a: any) => ({
+              date: new Date(a.date).toISOString(),
+              present: !!a.present,
+            }))
+          : [],
       }
     };
   } catch (error) {
@@ -87,23 +100,31 @@ export async function getUserById(userId: string) {
 export async function getUserByRollNumber(rollNumber: string) {
   try {
     await connectToDatabase();
-    const user = await User.findOne({ rollNumber });
-    
+    const input = (rollNumber || '').trim();
+    const regex = new RegExp(`^${input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, 'i');
+
+    // Try exact (case-insensitive) match on rollNumber, then fallback to universityRollNo
+    let user: any = await User.findOne({ $or: [ { rollNumber: regex }, { universityRollNo: regex } ] }).lean();
+    if (!user) {
+      user = await Students.findOne({ $or: [ { rollNumber: regex }, { universityRollNo: regex } ] }).lean();
+    }
     if (!user) {
       return { success: false, error: 'User not found' };
     }
-    
-    return {
-      success: true,
-      user: {
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        rollNumber: user.rollNumber,
-        qrCode: user.qrCode,
-        attendance: user.attendance,
-      }
+    const normalized = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      rollNumber: user.rollNumber,
+      qrCode: user.qrCode,
+      attendance: Array.isArray(user.attendance)
+        ? user.attendance.map((a: any) => ({
+            date: new Date(a.date).toISOString(),
+            present: !!a.present,
+          }))
+        : [],
     };
+    return { success: true, user: normalized };
   } catch (error) {
     console.error('Error fetching user:', error);
     return { success: false, error: 'Failed to fetch user' };
@@ -203,7 +224,7 @@ export async function markAttendance(userId: string) {
     });
 
     if (!user) {
-      user = Students.findOne({
+      user = await Students.findOne({
         qrCode: `${process.env.NEXT_PUBLIC_APP_URL || 'https://student-dashboard-sable.vercel.app'}/scan/${userId}`
       });
       
@@ -267,18 +288,37 @@ export async function markAttendance(userId: string) {
 export async function getAllUsers() {
   try {
     await connectToDatabase();
-    const users = await User.find({}).sort({ name: 1 });
-    
-    return {
-      success: true,
-      users: users.map(user => ({
-        id: user._id.toString(),
+    const coreUsers = await User.find({}).sort({ name: 1 }).lean();
+    const students = await Students.find({}).sort({ name: 1 }).lean();
+
+    const normalized = [
+      ...(coreUsers || []).map((user: any) => ({
+        id: user._id?.toString?.() ?? String(user._id),
         name: user.name,
         email: user.email,
         rollNumber: user.rollNumber,
-        attendance: user.attendance,
-      }))
-    };
+        attendance: Array.isArray(user.attendance)
+          ? user.attendance.map((a: any) => ({
+              date: new Date(a.date).toISOString(),
+              present: !!a.present,
+            }))
+          : [],
+      })),
+      ...(students || []).map((user: any) => ({
+        id: user._id?.toString?.() ?? String(user._id),
+        name: user.name,
+        email: user.email,
+        rollNumber: user.rollNumber,
+        attendance: Array.isArray(user.attendance)
+          ? user.attendance.map((a: any) => ({
+              date: new Date(a.date).toISOString(),
+              present: !!a.present,
+            }))
+          : [],
+      })),
+    ];
+
+    return { success: true, users: normalized };
   } catch (error) {
     console.error('Error fetching users:', error);
     return { success: false, error: 'Failed to fetch users' };
@@ -400,12 +440,18 @@ export async function registerStudents(studentData:{name:string,email:string,rol
 export async function getStudentByEmail(email: string) {
   try {
     await connectToDatabase();
-    const user = await Students.findOne({ email });
-    
+    const input = (email || '').trim();
+    const regex = new RegExp(`^${input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, 'i');
+
+    let user: any = await Students.findOne({ email: regex });
+    if (!user) {
+      user = await User.findOne({ email: regex });
+    }
+
     if (!user) {
       return { success: false, error: 'User not found' };
     }
-    
+
     return {
       success: true,
       user: {
@@ -419,17 +465,20 @@ export async function getStudentByEmail(email: string) {
         year: user.year,
         rollNumber: user.rollNumber,
         qrCode: user.qrCode,
-        attendance: user.attendance,
-
-        //gagan
+        attendance: Array.isArray(user.attendance)
+          ? user.attendance.map((a: any) => ({
+              date: new Date(a.date).toISOString(),
+              present: !!a.present,
+            }))
+          : [],
         cgpa: user.cgpa,
-    back: user.back,
-    summary: user.summary,
-    clubs: user.clubs,
-    aim: user.aim,
-    believe: user.believe,
-    expect: user.expect,
-    domain: user.domain,
+        back: user.back,
+        summary: user.summary,
+        clubs: user.clubs,
+        aim: user.aim,
+        believe: user.believe,
+        expect: user.expect,
+        domain: user.domain,
       }
     };
   } catch (error) {
@@ -464,7 +513,12 @@ export async function getStudentById(userId: string) {
         eventName: user.eventName,
         phoneNumber: user.phoneNumber,
         qrCode: user.qrCode,
-        attendance: user.attendance,
+        attendance: Array.isArray(user.attendance)
+          ? user.attendance.map((a: any) => ({
+              date: new Date(a.date).toISOString(),
+              present: !!a.present,
+            }))
+          : [],
         //gagan
         cgpa: user.cgpa,
     back: user.back,
@@ -501,7 +555,12 @@ export const getAllRecruitments = async () => {
         eventName: user.eventName,
         phoneNumber: user.phoneNumber,
         qrCode: user.qrCode,
-        attendance: user.attendance,
+        attendance: Array.isArray(user.attendance)
+          ? user.attendance.map((a: any) => ({
+              date: new Date(a.date).toISOString(),
+              present: !!a.present,
+            }))
+          : [],
         cgpa: user.cgpa,
         back: user.back,
         summary: user.summary,

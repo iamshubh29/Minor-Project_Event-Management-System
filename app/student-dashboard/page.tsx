@@ -180,7 +180,7 @@ useEffect(() => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
           <img src="/RTU logo.png" alt="Logo" className="h-8 w-8" />
-            <h1 className="text-xl font-bold">Placement Cell</h1>
+            <h1 className="text-xl font-bold">Event Management System</h1>
           </div>
           <Link href="/">
             <Button variant="ghost" size="sm">
@@ -257,8 +257,8 @@ useEffect(() => {
                 <CardContent>
                   <dl className="space-y-3 text-sm">
                     <div>
-                       <a href="https://chat.whatsapp.com/Hbdo8PoHe0u6ZY0KhOyZAx" className="hover:underline bg-gray-200 px-3 py-2 mb-2 rounded-lg text-black font-semibold" target="_blank" rel="noopener noreferrer">
-              Join Whastapp Group
+                       <a href="https://chat.whatsapp.com/CeM1n0ZrxxH7owou3ywUmI?mode=ac_t" className="hover:underline bg-gray-200 px-3 py-2 mb-2 rounded-lg text-black font-semibold" target="_blank" rel="noopener noreferrer">
+              Join WhatsApp Group
             </a>
                       <dt className="font-medium text-muted-foreground mt-3">
                         Name
@@ -455,7 +455,7 @@ useEffect(() => {
 
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Placement Cell. All rights reserved.
+          © {new Date().getFullYear()} Event Management System. All rights reserved.
         </div>
       </footer>
     </div>

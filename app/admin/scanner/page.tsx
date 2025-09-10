@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { GraduationCap, ArrowLeft, QrCode, CheckCircle, XCircle, LogOut, ArrowRight } from 'lucide-react';
+import { GraduationCap, ArrowLeft, QrCode, CheckCircle, XCircle, LogOut, ArrowRight, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { markAttendance, getAllUsers, logout } from '@/app/actions/user';
@@ -136,7 +136,7 @@ export default function ScannerPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
           <img src="/RTU logo.png" alt="Logo" className="h-8 w-8" />
-            <h1 className="text-xl font-bold">Placement Cell</h1>
+            <h1 className="text-xl font-bold">Event Management System</h1>
           </div>
           <div className="flex items-center space-x-2">
             <Link href="/">
@@ -156,12 +156,20 @@ export default function ScannerPage() {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold mb-6">Admin Dashboard</h2>
-          <Link href="/admin/scanner/review">
+          <div className="flex gap-2 mb-4">
+            <Link href="/admin/scanner/review">
               <Button variant="ghost" size="sm">
                 <ArrowRight className="h-4 w-4 mr-2" />
                 Get all registered students
               </Button>
             </Link>
+            <Link href="/send-reminder">
+              <Button variant="outline" size="sm">
+                <Mail className="h-4 w-4 mr-2" />
+                Send Reminders
+              </Button>
+            </Link>
+          </div>
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader className="pb-2">
@@ -364,7 +372,7 @@ export default function ScannerPage() {
 
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Placement Cell. All rights reserved.
+          © {new Date().getFullYear()} Event Management System. All rights reserved.
         </div>
       </footer>
     </div>

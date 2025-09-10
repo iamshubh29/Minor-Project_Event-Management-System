@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { createEvent, getEvents, deleteEvent as deleteEventAction,RemainerStudents } from "@/app/actions/events";
+import { createEvent, getEvents, deleteEvent as deleteEventAction, RemainerStudents, getEventAttendance } from "@/app/actions/events";
 
 interface Attendance {
   name: string;
@@ -65,14 +65,14 @@ export default function EventManager() {
     }
   }
   async function handleReminderEvent(id: string){
+    setLoading(true);
     const res = await RemainerStudents(id)
     if(res?.success){
-      toast.success("Student Reminded Successfully")
-      fetchEvents()
+      toast.success("✅ Reminder emails sent successfully to all registered students!")
     }else{
-      toast.error("Failed to reminded")
+      toast.error("❌ Failed to send reminder emails")
     }
-
+    setLoading(false);
   }
 
   async function handleDeleteEvent(id: string) {
@@ -82,6 +82,44 @@ export default function EventManager() {
       fetchEvents(); // 👈 Update the list automatically
     } else {
       toast.error("Failed to delete event");
+    }
+  }
+
+  function downloadAsCsv(filename: string, rows: any[]) {
+    const headers = Object.keys(rows[0] || { name: '', email: '', rollNumber: '', universityRollNo: '', branch: '', year: '', phoneNumber: '', attendanceCount: 0, lastAttendanceAt: '' });
+    const escape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [headers.join(',')]
+      .concat(
+        rows.map(r => headers.map(h => escape(r[h])).join(','))
+      )
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleDownloadAttendance(id: string) {
+    try {
+      const res = await getEventAttendance(id);
+      if (!res?.ok) {
+        toast.error(res?.error || 'Failed to download');
+        return;
+      }
+      if (!res.rows || res.rows.length === 0) {
+        toast.info('No student data found for this event');
+        return;
+      }
+      const filename = `${res.eventName.replace(/[^a-z0-9-_]+/gi, '_')}_attendance.csv`;
+      downloadAsCsv(filename, res.rows);
+    } catch (e) {
+      toast.error('Failed to download');
     }
   }
 
@@ -124,18 +162,28 @@ export default function EventManager() {
                   <CardContent className="p-4 space-y-2">
                     <h3 className="text-lg font-semibold">{event.eventName}</h3>
                     <p className="text-sm">Date: {event.eventDate}</p>
-                    <div className="flex gap-2">
-                      <Button variant="outline" disabled>
-                        Download Attendance
+                    <div className="flex gap-2 flex-wrap">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleDownloadAttendance(event._id)}
+                        disabled={loading}
+                      >
+                        📊 Download Attendance
                       </Button>
-                      <Button variant="destructive" className="hover hover:bg-red-700 hover:text-white" onClick={()=>handleReminderEvent(event._id)}>
-                        Reminder
+                      <Button 
+                        variant="default" 
+                        className="bg-orange-500 hover:bg-orange-600 text-white" 
+                        onClick={() => handleReminderEvent(event._id)}
+                        disabled={loading}
+                      >
+                        📧 Send Reminder
                       </Button>
                       <Button
                         variant="destructive"
                         onClick={() => handleDeleteEvent(event._id)}
+                        disabled={loading}
                       >
-                        Delete
+                        🗑️ Delete
                       </Button>
                     </div>
                   </CardContent>
