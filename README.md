@@ -32,7 +32,7 @@ A comprehensive QR-based attendance tracking and event management system for Raj
 - **Event Creation**: Create and manage multiple events
 - **Attendance Management**: Track attendance for specific events
 - **Bulk Operations**: Send reminders and notifications to all participants
-- **Data Analytics**: View attendance statistics and reports
+- **Data Analytics**: View attendance statistics and reports.
 
 ## 🛠 Tech Stack
 
